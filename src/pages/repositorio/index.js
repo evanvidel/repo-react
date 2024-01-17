@@ -21,7 +21,7 @@ export default function Repositorio() {
   const [filters, setFilters] = useState([
     { state: "all", label: "Todas", active: true },
     { state: "open", label: "Abertas", active: false },
-    { state: "close", label: "Fechadas", active: false },
+    { state: "closed", label: "Fechadas", active: false },
   ]);
   const [filterIndex, setFilterIndex] = useState(0);
 
@@ -33,7 +33,7 @@ export default function Repositorio() {
         api.get(`/repos/${nomeRepo}`),
         api.get(`/repos/${nomeRepo}/issues`, {
           params: {
-            state: "open",
+            state: filters.find((f) => f.active).state,
             per_page: 5,
           },
         }),
@@ -45,7 +45,7 @@ export default function Repositorio() {
     }
 
     load();
-  }, [nameParams.repositorio]);
+  }, [filters, nameParams.repositorio]);
 
   useEffect(() => {
     async function loadIssue() {
@@ -53,7 +53,7 @@ export default function Repositorio() {
 
       const response = await api.get(`/repos/${nomeRepo}/issues`, {
         params: {
-          state: filters.find((f) => f.active).state,
+          state: filters[filterIndex].state,
           page,
           per_page: 5,
         },
@@ -63,14 +63,14 @@ export default function Repositorio() {
     }
 
     loadIssue();
-  }, [filters, nameParams.repositorio, page]);
+  }, [filterIndex, filters, nameParams.repositorio, page]);
 
   function handlePage(action) {
     setPage(action === "back" ? page - 1 : page + 1);
   }
 
   function handleFilter(index) {
-    setFilterIndex(index)
+    setFilterIndex(index);
   }
 
   if (loading) {
@@ -94,7 +94,11 @@ export default function Repositorio() {
 
       <FilterList active={filterIndex}>
         {filters.map((filter, index) => (
-          <button type="button" key={filter.label} onClick={() => handleFilter(index)}>
+          <button
+            type="button"
+            key={filter.label}
+            onClick={() => handleFilter(index)}
+          >
             {filter.label}
           </button>
         ))}
